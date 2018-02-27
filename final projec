@@ -1,4 +1,5 @@
 # Project-419
-hahahaha
+# hey people! lets tackle this project!
+# Rick is working on reducing the dementionality of the data
 df = pd.read_excel("TARGET_ALL_Phase_II_ClinicalData_20170525.xlsx")
 e
