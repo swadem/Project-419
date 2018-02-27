@@ -1,4 +1,25 @@
 # Project-419
 hahahaha
 df = pd.read_excel("TARGET_ALL_Phase_II_ClinicalData_20170525.xlsx")
-e
+
+# just doing simple plotting to visualize the data
+
+# this graph shows the frequency of age of diagnosis
+age_of_diagnosis = df["Age at Diagnosis in Days"]
+ax1 = sns.distplot(age_of_diagnosis, kde=False, bins=125, color='black')
+ax1.set_title("Age of diagnosis for the Phase 2 \n COG-AALL0232 Clinical Trial")
+ax1.set_xlabel("Age of diagnosis in Days")
+ax1.set_ylabel("Frequency")
+
+# this graph compares the age of diagnosis vs the WBC at diagnosis, with color coding gender
+sns.lmplot(x="Age at Diagnosis in Days", y="WBC at Diagnosis", 
+           data=df, hue="Gender", fit_reg=False)
+
+#on another note, 
+#not sure why this won't this work:
+#overall_survival = df["Overall Survival Time in Days"]
+#or not even working when I try to graph it using sns.lmplot
+#I think it'd be really powerful to use the overall survival time
+#but I'm not sure why it's saying that this column isn't in the index
+#I'll work on it later but for now I'm giving up on fixing the data
+#nice
