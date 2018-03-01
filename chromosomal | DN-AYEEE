@@ -40,15 +40,11 @@ karyotype_numbers.apply(parse_karyotype)
 #I can visualize which values are repetative, and which did not parse correctly
 karyotype_numbers.value_counts()
 
-#...I'll do more later
-
-
+#....
 
 
 #-------------------DNA Index Data---------------------------
-#Next, I will be looking at the "DNA Index"
-#more information on how it affects pediatric ALL:
-#https://www.ncbi.nlm.nih.gov/pubmed/19793113
+#DNA Index & ALL: https://www.ncbi.nlm.nih.gov/pubmed/19793113
 #Hyperdiploidy with DI > or = 1.16 is predictive of favorable 
 #prognosis whereas hypodiploidy is associated with poor prognosis
 #So, I want to look if there is a correlation between DI and 
@@ -59,9 +55,12 @@ karyotype_numbers.value_counts()
 sns.lmplot("DNA Index", "Event Free Survival Time in Days", df)
 
 #There is an overwhelming number of patients with DNA Indexes of 1
-#So I want to look at which patients have > or = 1.16
-oneonesix = dna_index[dna_index >= 1.16] #this data frame shows 105 patients
+#I created a dataframe that only contains rows with DNA Index >= 1.16
+oneonesix = df[df["DNA Index"] >= 1.16] #105 patients represented
+sns.lmplot("DNA Index", "Overall Survival Time in Days ", 
+           oneonesix, fit_reg=False, hue="Gender")
 
-#...I'll do more later
 
 
+#------------------Other DNA Abnormalities----------------------
+dna_abnormalities = df[["TRISOMIES 4 10 Status", "MLL Status", "TCF3 PBX1 Status","Down Syndrome"]]
