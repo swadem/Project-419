@@ -1,0 +1,67 @@
+#In this branch, I am hoping to look at the chromosomal aspect of our data 
+#and how it relates to clinical progression of pediatric ALL
+#Specifically, I will be working with the "Karyotype" column of our data
+#and the "DNA index" of our data
+
+#----------------------Karyotype Data----------------------------
+#I am first going to retrieve the karyotype number of each patient
+
+#The first numbers in the column "Karyotype" of our data frame are the total 
+#number of chromosomes that the researchers collected from each individual patient
+#Some patients have no Karyotype information
+
+#First, I will drop the NaN values from the column, 
+# and make a new dataframe called "karyotype_numbers"
+karyotype_numbers = df["Karyotype"].dropna(axis = 0, how='any')
+
+#this function's purpose is stated within the function
+#due to the nature of this column of data, I want to separate out the
+#first number recorded, which is the karyotype number of each patient
+def parse_karyotype(df): 
+    '''
+    This fuction will strip the data of all spaces
+    and split the commas, leaving the first value 
+    of the row.
+    
+    Example: 
+    a row containing the data 
+    "47,XX,+21C[4]/48,IDEM,+X[11]" will return "47"
+    '''
+    return df.strip().split(",")[0]
+
+#Now, I can apply my function which will return the values
+karyotype_numbers.apply(parse_karyotype)
+
+#There are still some issues with the dataframe "karyotype_numbers"
+#The type of my values in this data frame is still a string
+#but there are some values that did not splice correctly due to 
+#data entry errors by those who prepared the data set
+
+#I can visualize which values are repetative, and which did not parse correctly
+karyotype_numbers.value_counts()
+
+#...I'll do more later
+
+
+
+
+#-------------------DNA Index Data---------------------------
+#Next, I will be looking at the "DNA Index"
+#more information on how it affects pediatric ALL:
+#https://www.ncbi.nlm.nih.gov/pubmed/19793113
+#Hyperdiploidy with DI > or = 1.16 is predictive of favorable 
+#prognosis whereas hypodiploidy is associated with poor prognosis
+#So, I want to look if there is a correlation between DI and 
+#overall surivial time and/or event free survival time
+
+#As a preliminary, I want to see if there's a correlation between
+#DNA index and event free survival time in days
+sns.lmplot("DNA Index", "Event Free Survival Time in Days", df)
+
+#There is an overwhelming number of patients with DNA Indexes of 1
+#So I want to look at which patients have > or = 1.16
+oneonesix = dna_index[dna_index >= 1.16] #this data frame shows 105 patients
+
+#...I'll do more later
+
+
