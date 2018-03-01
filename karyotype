@@ -1,0 +1,40 @@
+#The first numbers in the column "Karyotype" are the total number of 
+#chromosomes that the researchers collected from each individual patient
+#Some patients have no Karyotype information
+
+#Making a data frame of just the column "Karyotype"
+k = df["Karyotype"]
+
+#Dropping the NaN values
+knpd = k.dropna(axis = 0, how='any')
+
+#First, I need to make the data as string type
+strings = knpd.astype(str).values
+k_strings = strings.ravel()
+
+#I made a for loop to collect the karyotype numbers in it's own array called "karyotype_num"
+karyotype_num = []
+for x in k_strings:
+    first_two = x[0:2]
+    karyotype_num.append(first_two) #karyotype_num is a list type
+
+#I have changed it to a Pandas DF called "karyotype_number"
+#but it still contains string values
+k_arr = (np.array(karyotype_num))
+karr = pd.DataFrame(k_arr)
+
+
+#### ------- this needs to be fixed ---------
+#I noticed an error where one of the cells had a space before the first number began
+#which resulted in one karyotype value being "_4" instead of "46"
+#below is my attempt to fix this
+for x in k_arr:
+    if x == 4:
+        np.place(k_arr, x, 46)
+
+karyo = []
+for x in k_arr.size:
+    uh = k_arr[x]
+    print(uh)
+    #uh.astype(int)
+    #karyo.append(uh)
