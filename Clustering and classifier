@@ -1,0 +1,6 @@
+#---abstract---
+in this part of the project I’m hoping to predict first event of a patient
+numerical data was extracted, and missing data was managed. Firstly, the columns with more than 50% missing data were dropped. Then all the rows with missing data were dropped. After cleaning up the data, important categorical columns were added back in to perform classification. PCA was performed, The first 2 principal components explain more than 90% of the data. Different first event groups seem to occupy different parts of the graph. Points representing no event cluster on the top half of the graph while other events clustering on the bottom half of the graph. This suggests a potential method for predicting first event by classification.
+PCA graph also shows a potential clustering on PC1 but it could not be explained by any of the categorical data. So various unsupervised clustering methods were used to separate the data.
+#
+#
