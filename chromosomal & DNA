@@ -1,0 +1,116 @@
+#In this branch, I am hoping to look at the chromosomal aspect of our data 
+#and how it relates to clinical progression of pediatric ALL
+#Specifically, I will be working with the "Karyotype" column of our data
+#and the "DNA index" of our data
+
+#first, loading the data:
+df = pd.read_excel("TARGET_ALL_Phase_II_ClinicalData_20170525.xlsx")
+df.info()
+
+#----------------------Karyotype Data----------------------------
+#I am first going to retrieve the karyotype number of each patient
+
+#The first numbers in the column "Karyotype" of our data frame are the total 
+#number of chromosomes that the researchers collected from each individual patient
+#Some patients have no Karyotype information
+
+#First, I will drop the NaN values from the column, 
+# and make a new dataframe called "karyotype_numbers"
+karyotype_numbers = df["Karyotype"].dropna(axis = 0, how='any')
+
+#this function's purpose is stated within the function
+#due to the nature of this column of data, I want to separate out the
+#first number recorded, which is the karyotype number of each patient
+def parse_karyotype(df): 
+    '''
+    This fuction will strip the data of all spaces
+    and split the commas, leaving the first value 
+    of the row.
+    
+    Example: 
+    a row containing the data 
+    "47,XX,+21C[4]/48,IDEM,+X[11]" will return "47"
+    '''
+    return df.strip().split(",")[0]
+
+#Now, I can apply my function which will return the values
+karyotype_numbers.apply(parse_karyotype)
+
+#There are still some issues with the dataframe "karyotype_numbers"
+#The type of my values in this data frame is still a string but there are some values that
+#did not splice correctly due to data entry errors by those who prepared the data set
+
+#I can visualize which values are repetative, and which did not parse correctly
+karyotype_numbers.value_counts()
+
+#This is by far not the most efficient way but I could not come up with
+#another way before our interim report is due
+#If you know a better way pls send help pls
+kt_num = karyotype_numbers.str.replace("89~91", '90').str.replace("48~52", '50').str.replace("63~65", '64').str.replace("62\(35", '62').str.replace("90-92<4n>", '91').str.replace("54 XY", '54').str.replace("56~57", '56.5').str.replace("73\(36", '73').str.replace("67<3n>", '67')
+
+#Using regex \D to remove any non-digit characters
+kt_num.replace(regex=True,inplace=True,to_replace=r'\D',value=r'')
+
+#Fixing various subsequent problems
+kn = kt_num.str.replace("565", '56.5').str.replace("1911923133", '0')
+karyo_num = kn.astype(float)
+karyo_num = karyo_num[karyo_num > 0]
+karyo_num.value_counts()
+
+#Now, we have a pandas df with dtype float, so we can run tests!
+karyo_num.mean()
+
+#-------------------DNA Index Data---------------------------
+#Info on DNA Index & ALL: https://www.ncbi.nlm.nih.gov/pubmed/19793113
+#Hyperdiploidy with DI > or = 1.16 is predictive of favorable 
+#prognosis whereas hypodiploidy is associated with poor prognosis
+#So, I want to look if there is a correlation between DI and 
+#overall surivial time and/or event free survival time
+
+#As a preliminary, I want to see if there's a correlation between
+#DNA index and event free survival time in days
+sns.lmplot("DNA Index", "Event Free Survival Time in Days", df)
+
+#There is an overwhelming number of patients with DNA Indexes of 1
+#I created a dataframe that only contains rows with DNA Index >= 1.16
+oneonesix = df[df["DNA Index"] >= 1.16] #105 patients represented
+sns.lmplot("DNA Index", "Overall Survival Time in Days ", 
+           oneonesix, fit_reg=False, hue="Gender")
+
+#------------------Other DNA Abnormalities----------------------
+#In this section, I want to look at columns that have more of a binary input
+#and compare them to other data columns
+dna_abnormalities = df[["TRISOMIES 4 10 Status", "MLL Status", "TCF3 PBX1 Status","Down Syndrome"]]
+
+#Looking at Trisomy 4 10 status
+pd.get_dummies(dna_abnormalities['TRISOMIES 4 10 Status']).sum()
+
+#Looking at MLL Status
+pd.get_dummies(dna_abnormalities['MLL Status']).sum()
+
+#Looking at TCF3 PBX1 Status
+pd.get_dummies(dna_abnormalities['TCF3 PBX1 Status']).sum()
+
+#Looking at Down Syndrome
+pd.get_dummies(dna_abnormalities['Down Syndrome']).sum()
+
+#I have created a new df called "da_binary" that follows the following:
+#Negative/No = 0, Positive/Yes = 1, Unknown = NaN
+da_binary = dna_abnormalities.replace('Negative',0).replace('Positive',1).replace('Unknown',np.nan).replace('Yes',1).replace('No',1)
+da_binary
+
+#drop rows that contain none types
+da_binary_nona = da_binary.dropna(axis=0, how="any") #represents 483 patients
+
+#Beginning to plot different things with color coding of my binary data
+ax1 = sns.lmplot("Age at Diagnosis in Days", "DNA Index", 
+           oneonesix, hue="TRISOMIES 4 10 Status", fit_reg=False)
+
+ax2 = sns.lmplot("Age at Diagnosis in Days", "DNA Index", 
+           oneonesix, hue="TCF3 PBX1 Status", fit_reg=False)
+
+ax3 = sns.lmplot("Age at Diagnosis in Days", "DNA Index",
+           oneonesix, hue="MLL Status", fit_reg=False)
+
+ax4 = sns.lmplot("Age at Diagnosis in Days", "DNA Index",
+           oneonesix, hue="Down Syndrome", fit_reg=False)
