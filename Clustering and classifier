@@ -1,6 +1,128 @@
 #---abstract---
 in this part of the project I’m hoping to predict first event of a patient
-numerical data was extracted, and missing data was managed. Firstly, the columns with more than 50% missing data were dropped. Then all the rows with missing data were dropped. After cleaning up the data, important categorical columns were added back in to perform classification. PCA was performed, The first 2 principal components explain more than 90% of the data. Different first event groups seem to occupy different parts of the graph. Points representing no event cluster on the top half of the graph while other events clustering on the bottom half of the graph. This suggests a potential method for predicting first event by classification.
-PCA graph also shows a potential clustering on PC1 but it could not be explained by any of the categorical data. So various unsupervised clustering methods were used to separate the data.
-#
-#
+numerical data was extracted, and missing data was managed. 
+Firstly, the columns with more than 50% missing data were dropped. 
+Then all the rows with missing data were dropped. 
+After cleaning up the data, important categorical columns were added back in to perform classification. 
+PCA was performed, The first 2 principal components explain more than 90% of the data. 
+Different first event groups seem to occupy different parts of the graph. 
+Points representing no event cluster on the top half of the graph while other events clustering on the bottom half of the graph. 
+This suggests a potential method for predicting first event by classification.
+PCA graph also shows a potential clustering on PC1 but it could not be explained by any of the categorical data.
+So various unsupervised clustering methods were used to separate the data.
+#---heres the code---
+#---imports---
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from sklearn.cluster import AgglomerativeClustering, KMeans
+
+%matplotlib inline
+
+sns.set()
+sns.set_style("ticks")
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from sklearn.cluster import AgglomerativeClustering, KMeans
+
+%matplotlib inline
+
+sns.set()
+sns.set_style("ticks")
+
+#---to show the entire dataframe
+pd.set_option('display.max_rows', 200, 'display.max_columns', 200)
+
+#---loading the data
+df = pd.read_excel('TARGET_ALL_Phase_II_ClinicalData_20170525.xlsx')
+
+#---differnet race on age of diagnosis against event free time graph
+#--- I dont see a clear seperation between the races
+df_rc_uk = df['Race'] != 'Unknown'
+lm = sns.lmplot('Age at Diagnosis in Days','Event Free Survival Time in Days', 
+           df[df_rc_uk], hue='Race',fit_reg=False, size = 5, col = 'Race')
+
+#---select only the nu,merical data and then append important catigorical data 
+ndf = df.select_dtypes(include=[np.number])
+ndf = pd.DataFrame(ndf)
+
+ndf['First Event'] = df['First Event']
+ndf['Race'] = df['Race']
+ndf['Gender'] = df['Gender']
+ndf['ALL Mol Subtype'] = df['ALL Mol Subtype']
+
+#---takes out coloumns with more than 50% misssing data and then take out all the rows with missing data
+ndf_dp_na = ndf.drop(['MRD Day 8','MRD Day 8 Sensitivity\n', 
+                      'MRD End Consolidation', 'End of Consolidation MRD Sensitivity\n',
+                      'BMA Blasts Day 15', 'BMA Blasts Day 43', 'DNA Index', 'MRD Day 43', 
+                      'MRD Day 43 Sensitivity\n','ALL Gene expression subtype'], axis = 1).dropna()
+np.shape(ndf_dp_na)
+
+#---basically hw5
+#---here 90% of the data can be explained by only two pc's
+plt.plot(pca.explained_variance_ratio_)
+plt.title('fraction of variant explained')
+plt.ylabel('franction')
+plt.xlabel('princial conponets')
+x = 0
+counter = 0
+for i in pca.explained_variance_ratio_:
+    x = i + x
+    counter += 1
+    if x >= 0.9:
+        print('%d componets are need to explain 90%% of the data' %counter)
+        break
+
+#---creating a fucntion to run pca and append categorical data back
+#to the df
+def run_pca(df):
+    
+    #---change genes_df to float array
+    df_float = df.iloc[:,:10].astype(float).values
+    
+    #---run pca
+    pca = PCA(n_components=10)
+    pca.fit(df_float)
+    pca.fit_transform
+
+    #---append cancertype on to pc data\
+    columns = ['pc1', 'pc2', 'pc3', 'pc4', 'pc5',
+              'pc6', 'pc7', 'pc8', 'pc9', 'pc10']
+    df_pc = pd.DataFrame(pca.transform(df_float), columns = columns)
+    ndf_dp_na.index = range(len(ndf_dp_na))
+    df_pc['First Event'] = ndf_dp_na['First Event']
+    df_pc['Race'] = ndf_dp_na['Race']
+    df_pc['Gender'] = ndf_dp_na['Gender']
+    df_pc['ALL Mol Subtype'] = ndf_dp_na['ALL Mol Subtype']
+
+    return df_pc, pca
+ndf_pc, pca = run_pca(ndf_dp_na)
+
+
+#---generate a no event column, im trying to classify base on have events and event free
+ndf_pc_No_event = ndf_pc['First Event'] == 'None'
+ndf_pc['No Event'] = ndf_pc_No_event
+
+#---ploting no event vs event on pc tranformed data
+sns.lmplot('pc1','pc2',data = ndf_pc, fit_reg = None, hue = 'No Event', size = 5)
+
+
+
+
+
+#---use kmean to do clustering
+
+ndf_pc_ar = ndf_pc.iloc[:,:10].astype(float).values
+kmeans = KMeans(n_clusters=2, random_state=0).fit(ndf_pc_ar)
+kmeans.fit_predict(ndf_pc_ar)
+ndf_pc['kmeans'] = kmeans.fit_predict(ndf_pc_ar)
+sns.lmplot("pc1", "pc2", ndf_pc, hue="kmeans", fit_reg=False)
