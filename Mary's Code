@@ -1,0 +1,150 @@
+"""
+Conclusions So Far: 
+
+There are 361 women and 430 men in this dataset
+
+Both men and women have similar distributions of event free survival time
+
+Event-free survival time, and overall survival time are pretty similar in number. Implies that once
+an event occurs, this patient will not have but one more year to live.
+
+In women and men, it looks like there is a greater correlation between event free survival time, and a first event
+of "none" 
+
+There is greater overall surival time in comparison to time till first event, when first event is 'relapse'
+
+The event-free survival time : overall survival time ratio is 1 a great number of times, for both men and women
+
+"""
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from sklearn.cluster import AgglomerativeClustering, KMeans
+
+%matplotlib inline
+
+sns.set()
+sns.set_style("ticks")
+
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
+from sklearn.cluster import AgglomerativeClustering, KMeans
+
+from statistics import mode
+
+%matplotlib inline
+
+sns.set()
+sns.set_style("ticks")
+
+#---to show the entire dataframe
+pd.set_option('display.max_rows', 200, 'display.max_columns', 200)
+
+#---loading the data
+df = pd.read_excel('TARGET_ALL_Phase_II_ClinicalData_20170525.xlsx')
+df.shape
+
+df_no_na = df.dropna(how = 'any')
+df_no_na.shape
+
+male_df = df[df['Gender'] == 'Male']
+male_df.shape
+
+female_df = df[df['Gender'] == 'Female']
+female_df.shape
+
+#Graph male event free survival time versus female event free survival time
+#review: I really like your conclusion base on this graph, the distribution of male and females does look really similar
+male_ev_free_surv_time = np.array(male_df['Event Free Survival Time in Days'])
+female_ev_free_surv_time = np.array(female_df['Event Free Survival Time in Days'].dropna(how = 'any'))
+
+h = sns.distplot(male_ev_free_surv_time, color= 'red', label= 'men', bins= 15)
+k = sns.distplot(female_ev_free_surv_time, color= 'yellow', label= 'women', bins = 15)
+
+plt.title('Event free survival time in Days')
+plt.legend()
+plt.show()
+
+print("mean male event-free survival time: ", np.mean(male_ev_free_surv_time)/365, 'years', 
+      '\n', "mean female event-free survival time: ", 
+      np.mean(female_ev_free_surv_time)/365, 'years')
+
+male_ov_surv_time = np.array(male_df['Overall Survival Time in Days '].dropna(how = 'any'))
+female_ov_surv_time = np.array(female_df['Overall Survival Time in Days '].dropna(how = 'any'))
+
+h = sns.distplot(male_ov_surv_time, color= 'red', label= 'men', bins = 15)
+k = sns.distplot(female_ov_surv_time, color= 'yellow', label= 'women', bins = 15)
+
+plt.legend()
+plt.title('Male Vs. Female Overall Survival time')
+plt.show()
+
+print("mean male overall survival time: ", np.mean(male_ov_surv_time)/365, 'years'
+      '\n', "mean female overall survival time: ", 
+      np.mean(female_ov_surv_time)/365, 'years')
+
+# The relationship between event free survival time and overall survival time is pretty linear
+# review: maybe drop the none data will make the graph cleaner, but before you drop the none data, please make sure it 
+# will not create any biasness to you analysis. Maybe add a linear regression line. Base on the graph,
+# the overal survival time days and event free survival days may be positively correlated. 
+sns.lmplot('Event Free Survival Time in Days', 'Overall Survival Time in Days ', male_df, fit_reg= False, 
+          hue = 'First Event') 
+#, male_df, col = 'First Event'
+plt.title('Event Free Survival Time Vs. Overall Survival Time in Men')
+
+sns.lmplot('Event Free Survival Time in Days', 'Overall Survival Time in Days ', female_df, fit_reg= False, 
+          hue = 'First Event') 
+plt.title('Event Free Survival Time Vs. Overall Survival Time in Women')
+
+
+#two years of event free, how long to live after certain events, using linear regression
+
+# Different First Events: 'Relapse' 'Death' 'Induction failure' 'SMN' 'Progression' 'Death without Remmissio"
+# 'None' 'Censored'
+
+# Graph event free survival time : overall survival time ratio
+# review: the distribution looks very left skew, this could be important when you try to interpretate the graph
+male_merged = np.column_stack((male_ev_free_surv_time, male_ov_surv_time))
+
+male_ratio_list = []
+for item in male_merged:
+    male_ratio_list.append(item[0]/item[1])
+    
+female_merged = np.column_stack((female_ev_free_surv_time, female_ov_surv_time))
+
+female_ratio_list = []
+for item in female_merged:
+    female_ratio_list.append(item[0]/item[1])
+
+sns.distplot(male_ratio_list, color = 'red', bins = 30, label= 'men')
+sns.distplot(female_ratio_list, color= 'blue', bins = 30, label= 'women')
+plt.title('Event-Free Survival time : Overall Survival time Ratio in Men and Women')
+
+plt.legend()
+plt.show()
+
+White_df = df[df['Race'] == 'White']
+Hispanic_Latino_df = White_df[White_df['Ethnicity'] == 'Hispanic or Latino']
+White_non_Hispanic_Latino_df = White_df[White_df['Ethnicity'] == 'Not Hispanic or Latino']
+
+African_Am_df = df[df['Race'] == 'Black or African American']
+African_Am_Latino_df = African_Am_df[African_Am_df['Ethnicity'] == 'Hispanic or Latino']
+African_Am_non_Latino_df = African_Am_df[African_Am_df['Ethnicity'] == 'Not Hispanic or Latino']
+
+Asian_df = df[df['Race'] == 'Asian']
+Asian_Latino_df = Asian_df[Asian_df['Ethnicity'] == 'Hispanic or Latino']
+Asian_non_Latino_df = Asian_df[Asian_df['Ethnicity'] == 'Not Hispanic or Latino']
+
+Am_Indian_df = df[df['Race'] == 'American Indian or Alaska Native']
+
+Pacific_Islander_df = df[df['Race'] == 'Native Hawaiian or other Pacific Islander']
+
